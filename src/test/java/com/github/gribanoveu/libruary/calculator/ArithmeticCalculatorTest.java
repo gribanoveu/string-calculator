@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Evgeny Gribanov
- * @version 19.04.2024
+ * @version 20.04.2024
  */
 class ArithmeticCalculatorTest {
     private Calculator calculator;
