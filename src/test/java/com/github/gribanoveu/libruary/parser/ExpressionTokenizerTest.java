@@ -117,6 +117,42 @@ class ExpressionTokenizerTest {
     }
 
     @Test
+    void tokenizeFraction() {
+        var expression = "1.5+0.25";
+        var tokenizerResult = tokenizer.parseExpression(expression);
+        assertThat(tokenizerResult)
+                .as("Число с дробной частью должно быть одним токеном")
+                .containsExactly(
+                        new Token(TokenType.NUMBER, "1.5"),
+                        new Token(TokenType.OP_PLUS, "+"),
+                        new Token(TokenType.NUMBER, "0.25"),
+                        Token.EOF
+                );
+    }
+
+    @Test
+    void tokenizeThrowOnTwoDots() {
+        assertThatThrownBy(() -> tokenizer.parseExpression("1.2.3"))
+                .as("Ожидался неверный символ")
+                .isInstanceOf(ArithmeticException.class)
+                .hasMessageContaining("Unexpected character: .");
+    }
+
+    @Test
+    void tokenizeNonBreakingSpace() {
+        var expression = "1 +\u00A02";
+        var tokenizerResult = tokenizer.parseExpression(expression);
+        assertThat(tokenizerResult)
+                .as("Неразрывный пробел должен игнорироваться как обычный")
+                .containsExactly(
+                        new Token(TokenType.NUMBER, "1"),
+                        new Token(TokenType.OP_PLUS, "+"),
+                        new Token(TokenType.NUMBER, "2"),
+                        Token.EOF
+                );
+    }
+
+    @Test
     void tokenizeEmptyString() {
         var expression = "";
         var tokenizerResult = tokenizer.parseExpression(expression);

@@ -1,6 +1,7 @@
 package com.github.gribanoveu.libruary.util;
 
 
+import com.github.gribanoveu.libruary.exception.FunctionException;
 import com.github.gribanoveu.libruary.function.CalculateFunction;
 
 import java.util.HashMap;
@@ -44,6 +45,10 @@ public class FunctionManager {
      * @return результат вычисления функции.
      */
     public double applyFunction(String name, List<Double> args) {
-        return functions.get(name).apply(args);
+        var function = functions.get(name);
+        if (function == null) {
+            throw new FunctionException("Function not found: " + name);
+        }
+        return function.apply(args);
     }
 }

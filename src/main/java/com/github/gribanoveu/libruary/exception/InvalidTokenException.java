@@ -10,6 +10,7 @@ import com.github.gribanoveu.libruary.util.TokenBuffer;
  */
 public class InvalidTokenException extends ArithmeticException {
     public InvalidTokenException(TokenBuffer buffer) {
-        super("Unexpected token at position: %s".formatted(buffer.getTokenPosition()));
+        super("Unexpected token at position: %s (character %s)".formatted(
+                buffer.getTokenPosition(), buffer.getCharPosition()));
     }
 }

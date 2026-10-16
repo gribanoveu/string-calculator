@@ -20,7 +20,7 @@ import static com.github.gribanoveu.libruary.entity.TokenType.*;
  * ПлюсМинус:  УмножДелен  [('+' | '-') УмножДелен ]* ;      подвыражение со сложением или вычитанием    4 + 2
  * УмножДелен: Множит [('*' | '/') Множит ]* ;               подвыражение с умножением или делением      2 * 2
  * Множит:     Функц | Унарн | Число | '(' ВЫРАЖЕНИЕ ')' ;   номер или выражение в скобках               2 + (2 * 2)
- * Унарн:      '-' Множит                                    унарное выражение                           - 2 + 4
+ * Унарн:      ('-' | '+') Множит                            унарное выражение                           - 2 + 4
  * Функц:       Имя '(' ВЫРАЖЕНИЕ (, ВЫРАЖЕНИЕ)+)? ')'       функция                                     min(2, 4)
  * </code>
  * Вычисление идет снизу вверх.
@@ -48,11 +48,14 @@ public class SyntaxEvaluator implements ExpressionEvaluator {
     @Override
     public double calculateExpression(TokenBuffer buffer) {
         if (buffer.next().type() == EOF) {
-            return 0.0;
-        } else {
-            buffer.back();
-            return calculatePlusMinus(buffer);
+            return 0.0; // пустое выражение
         }
+        buffer.back();
+        var value = calculatePlusMinus(buffer);
+        if (buffer.next().type() != EOF) { // например (2)(3): после выражения остались токены
+            throw new InvalidTokenException(buffer);
+        }
+        return value;
     }
 
 
@@ -92,7 +95,13 @@ public class SyntaxEvaluator implements ExpressionEvaluator {
             var token = buffer.next();
             switch (token.type()) { // считаем только умножение и деление
                 case OP_MULTIPLICATION -> value *= calculateBrackets(buffer);
-                case OP_DIVISION -> value /= calculateBrackets(buffer);
+                case OP_DIVISION -> {
+                    var divisor = calculateBrackets(buffer);
+                    if (divisor == 0) { // иначе в ответ уйдет Infinity или NaN
+                        throw new ArithmeticException("Division by zero");
+                    }
+                    value /= divisor;
+                }
                 default -> { // если встретилось что-то другое, значит выражение закончилось
                     buffer.back(); // откатываемся на токен назад
                     return value;
@@ -120,11 +129,16 @@ public class SyntaxEvaluator implements ExpressionEvaluator {
                 var value = calculateBrackets(buffer);
                 return -value; // возвращает значение со знаком минус
             }
+            case OP_PLUS -> { // унарный плюс: +5 и 2 * +5
+                return calculateBrackets(buffer);
+            }
             case NUMBER -> { // если токен число, то возвращаем число
                 return Double.parseDouble(token.value());
             }
             case LEFT_BRACKET -> { // если токен открывающая скобка
-                var value = calculateExpression(buffer); // вычисляем значение внутри
+                // внутри скобок выражение заканчивается на закрывающую скобку, а не на EOF,
+                // поэтому здесь нельзя звать calculateExpression
+                var value = calculatePlusMinus(buffer);
                 token = buffer.next();
                 if (token.type() != RIGHT_BRACKET) { // если нет закрывающей скобки, значит неверное выражение
                     throw new InvalidTokenException(buffer);
@@ -150,11 +164,11 @@ public class SyntaxEvaluator implements ExpressionEvaluator {
         }
 
         var args = new ArrayList<Double>();
-        buffer.next();
+        token = buffer.next(); // если сразу ')', то аргументов нет
         if (token.type() != RIGHT_BRACKET) {
             buffer.back();
             do { // вычислить выражение внутри
-                args.add(calculateExpression(buffer));
+                args.add(calculatePlusMinus(buffer)); // аргумент заканчивается на ',' или ')'
                 token = buffer.next();
 
                 if (token.type() != COMMA && token.type() != RIGHT_BRACKET) {

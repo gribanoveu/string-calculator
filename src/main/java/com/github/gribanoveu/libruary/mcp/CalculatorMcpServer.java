@@ -39,6 +39,12 @@ public final class CalculatorMcpServer {
             .registerFunction("max", new MaximalValueFunction())
             .build();
 
+    /**
+     * Предел длины выражения: разбор рекурсивный, и на глубине в тысячи скобок стек кончается,
+     * а StackOverflowError не ловится как RuntimeException.
+     */
+    private static final int MAX_EXPRESSION_LENGTH = 1000;
+
     private CalculatorMcpServer() {
     }
 
@@ -63,8 +69,14 @@ public final class CalculatorMcpServer {
         if (!(expression instanceof String e)) {
             return result("Unknown tool or missing 'expression' argument", true);
         }
+        if (e.length() > MAX_EXPRESSION_LENGTH) {
+            return result("Expression is too long: %s characters, the limit is %s"
+                    .formatted(e.length(), MAX_EXPRESSION_LENGTH), true);
+        }
         try {
             return result(String.valueOf(CALCULATOR.calculate(e)), false);
+        } catch (StackOverflowError error) { // Error, а не RuntimeException, поэтому отдельно
+            return result("Expression is nested too deeply", true);
         } catch (RuntimeException ex) {
             return result(ex.getMessage() != null ? ex.getMessage() : ex.toString(), true);
         }

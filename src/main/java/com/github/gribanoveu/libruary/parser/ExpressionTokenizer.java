@@ -8,6 +8,7 @@ import com.github.gribanoveu.libruary.util.FunctionManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class ExpressionTokenizer implements Tokenizer {
     private final FunctionManager functionManager;
@@ -16,6 +17,9 @@ public class ExpressionTokenizer implements Tokenizer {
         this.functionManager = functionManager;
     }
 
+    // \s не покрывает неразрывный пробел, а выражение часто приходит из текста
+    private static final Pattern SPACES = Pattern.compile("\\s+", Pattern.UNICODE_CHARACTER_CLASS);
+
     private static final Token LEFT_BRACKET = new Token(TokenType.LEFT_BRACKET, "(");
     private static final Token RIGHT_BRACKET = new Token(TokenType.RIGHT_BRACKET, ")");
     private static final Token OP_PLUS = new Token(TokenType.OP_PLUS, "+");
@@ -23,11 +27,10 @@ public class ExpressionTokenizer implements Tokenizer {
     private static final Token OP_MULTIPLICATION = new Token(TokenType.OP_MULTIPLICATION, "*");
     private static final Token OP_DIVISION = new Token(TokenType.OP_DIVISION, "/");
     private static final Token COMMA = new Token(TokenType.COMMA, ",");
-    private static final Token EOF = new Token(TokenType.EOF, "");
 
     @Override
     public List<Token> parseExpression(String inputExpression) {
-        var expression = inputExpression.replaceAll("\\s+", "");
+        var expression = SPACES.matcher(inputExpression).replaceAll("");
         var tokens = new ArrayList<Token>();
         int index = 0;
 
@@ -55,22 +58,29 @@ public class ExpressionTokenizer implements Tokenizer {
                 index++;
             }
         }
-        tokens.add(EOF);
+        tokens.add(Token.EOF);
         return tokens;
     }
 
     /**
-     * Собрать число, если оно состоит из больше, чем одного символа.
+     * Собрать число: целая часть и, если есть, дробная (2, 1.5, 0.25).
      * @param expression входящее выражение
      * @param start позиция токена
      * @return полное число
      */
     private Token readNumber(String expression, int start) {
-        var digitBuilder = new StringBuilder();
-        while (start < expression.length() && Character.isDigit(expression.charAt(start))) {
-            digitBuilder.append(expression.charAt(start++));
+        var numberBuilder = new StringBuilder();
+        while (start < expression.length()) {
+            var current = expression.charAt(start);
+            var isFraction = current == '.' && numberBuilder.indexOf(".") < 0; // только одна точка
+            if (Character.isDigit(current) || isFraction) {
+                numberBuilder.append(current);
+                start++;
+            } else {
+                break;
+            }
         }
-        return new Token(TokenType.NUMBER, digitBuilder.toString());
+        return new Token(TokenType.NUMBER, numberBuilder.toString());
     }
 
     /**

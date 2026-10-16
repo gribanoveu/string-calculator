@@ -34,4 +34,22 @@ class CalculatorMcpServerTest {
         assertThat(result.isError()).isTrue();
         assertThat(((TextContent) result.content().get(0)).text()).contains("missing 'expression'");
     }
+
+    @Test
+    void returnsErrorForTooLongExpression() {
+        var result = CalculatorMcpServer.calculate(null, new CallToolRequest("calculate",
+                Map.of("expression", "1+".repeat(600) + "1")));
+        assertThat(result.isError()).isTrue();
+        assertThat(((TextContent) result.content().get(0)).text())
+                .as("Слишком длинное выражение должно отклоняться до разбора")
+                .contains("too long");
+    }
+
+    @Test
+    void calculatesDeeplyNestedExpression() {
+        var result = CalculatorMcpServer.calculate(null, new CallToolRequest("calculate",
+                Map.of("expression", "(".repeat(400) + "1" + ")".repeat(400))));
+        assertThat(result.isError()).isFalse();
+        assertThat(((TextContent) result.content().get(0)).text()).isEqualTo("1.0");
+    }
 }
