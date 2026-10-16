@@ -21,8 +21,9 @@ When adding your own functions, you should also use this exception.
 ##### MCP server
 
 The jar can be run as an MCP server (stdio transport) with a single `calculate` tool
-(supports `min` and `max` functions). It has no dependencies; the JVM flags below reduce memory usage
-(~40 MB RSS) and startup time.
+(supports `min` and `max` functions). The protocol is handled by the official MCP Java SDK
+(`io.modelcontextprotocol.sdk:mcp`), so `mvn package` builds a self-contained jar (~6 MB) with all
+dependencies; the JVM flags below reduce memory usage (~67 MB RSS) and startup time.
 
     mvn package
 
@@ -61,8 +62,9 @@ For Claude Code: `claude mcp add calculator -- java -XX:TieredStopAtLevel=1 -XX:
 ##### MCP сервер
 
 Jar можно запустить как MCP сервер (транспорт stdio) с одним инструментом `calculate`
-(поддерживаются функции `min` и `max`). Сервер не имеет зависимостей, а флаги JVM ниже уменьшают
-потребление памяти (~40 МБ RSS) и время старта.
+(поддерживаются функции `min` и `max`). Протокол обрабатывает официальный MCP Java SDK
+(`io.modelcontextprotocol.sdk:mcp`), поэтому `mvn package` собирает self-contained jar (~6 МБ) со всеми
+зависимостями, а флаги JVM ниже уменьшают потребление памяти (~67 МБ RSS) и время старта.
 
     mvn package
 
