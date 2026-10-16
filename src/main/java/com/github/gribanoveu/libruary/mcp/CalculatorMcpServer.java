@@ -2,8 +2,6 @@ package com.github.gribanoveu.libruary.mcp;
 
 import com.github.gribanoveu.libruary.calculator.ArithmeticCalculatorBuilder;
 import com.github.gribanoveu.libruary.calculator.Calculator;
-import com.github.gribanoveu.libruary.function.MaximalValueFunction;
-import com.github.gribanoveu.libruary.function.MinimalValueFunction;
 import io.modelcontextprotocol.json.McpJsonDefaults;
 import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpSyncServerExchange;
@@ -24,8 +22,9 @@ import java.util.Map;
  * @version 16.10.2026
  */
 public final class CalculatorMcpServer {
-    private static final String TOOL_DESCRIPTION = "Evaluates an arithmetic expression with + - * / ( ), "
-            + "unary minus and functions min(a, b, ...), max(a, b, ...)";
+    private static final String TOOL_DESCRIPTION = "Evaluates an arithmetic expression with + - * / ( ), unary minus "
+            + "and functions min, max, sum, avg, abs, sqrt, pow, mod, round, floor, ceil, ln, log, exp, sin, cos, tan. "
+            + "The angles of sin, cos and tan are in radians";
 
     private static final Map<String, Object> INPUT_SCHEMA = Map.of(
             "type", "object",
@@ -34,10 +33,8 @@ public final class CalculatorMcpServer {
                     "description", "Expression, e.g. 2 * (3 + 4) - max(1, 5)")),
             "required", List.of("expression"));
 
-    private static final Calculator CALCULATOR = new ArithmeticCalculatorBuilder()
-            .registerFunction("min", new MinimalValueFunction())
-            .registerFunction("max", new MaximalValueFunction())
-            .build();
+    // стандартные функции билдер регистрирует сам
+    private static final Calculator CALCULATOR = new ArithmeticCalculatorBuilder().build();
 
     /**
      * Предел длины выражения: разбор рекурсивный, и на глубине в тысячи скобок стек кончается,

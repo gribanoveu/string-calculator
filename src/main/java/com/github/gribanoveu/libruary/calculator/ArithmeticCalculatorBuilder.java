@@ -1,6 +1,7 @@
 package com.github.gribanoveu.libruary.calculator;
 
 import com.github.gribanoveu.libruary.function.CalculateFunction;
+import com.github.gribanoveu.libruary.function.DefaultFunctions;
 import com.github.gribanoveu.libruary.util.FunctionManager;
 
 /**
@@ -11,8 +12,14 @@ import com.github.gribanoveu.libruary.util.FunctionManager;
 public class ArithmeticCalculatorBuilder {
     private final FunctionManager functionManager;
 
+    /**
+     * Создать билдер со стандартными функциями, которые уже зарегистрированы:
+     * min, max, sum, avg, abs, sqrt, pow, mod, round, floor, ceil, ln, log, exp, sin, cos, tan.
+     * Своя функция с тем же именем заменит стандартную.
+     */
     public ArithmeticCalculatorBuilder() {
         this.functionManager = new FunctionManager();
+        DefaultFunctions.all().forEach(functionManager::registerFunction);
     }
 
     /**
